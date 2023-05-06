@@ -133,11 +133,32 @@ public class LexicalAnalysis implements AutoCloseable {
 
                     break;
                 case 2:
-                    break;
+                    if (c == '/'){
+                        state = 3;
+                        token.lexeme += (char) c;
+                    } else{
+                        state = 13;
+                        ungetc(c);
+                    }
+
                 case 3:
-                    break;
+                    if (c == '\n'){
+                        state = 1;
+                        token.lexeme += (char) c;
+                    }else{
+                        state = 3;
+                        ungetc(c);
+                    }
+
                 case 4:
-                    break;
+                if (c == '='){
+                    state = 13;
+                    token.lexeme += (char) c;
+                }else if(c != '='){
+                    state = 13;
+                    ungetc(c);
+                }
+
                 case 5:
                     if (c == '+') {
                         state = 13;
@@ -206,9 +227,23 @@ public class LexicalAnalysis implements AutoCloseable {
 
                     break;
                 case 11:
-                    break;
+                    if (Character.isDigit(c)) {
+                        state = 11;
+                        token.lexeme += (char) c;
+                    }else{
+                        state = 14;
+                        ungetc(c);
+                    }
+
                 case 12:
-                    break;
+                    if(c == '"'){
+                        state = 14;
+                        token.lexeme += (char) c;
+                    }else if(c != '"'){
+                        state = 12;
+                        ungetc(c);
+                    }
+                    
                 default:
                     throw new RuntimeException("Unreachable");
             }
