@@ -1,5 +1,6 @@
 package interpreter.expr;
 
+import interpreter.value.BoolValue;
 import interpreter.value.NumberValue;
 import interpreter.value.Value;
 
@@ -81,28 +82,58 @@ public class BinaryExpr extends Expr {
     }
 
     private Value<?> andOp(Value<?> v1, Value<?> v2) {
-        throw new RuntimeException("Me implemente!");
+        boolean d1 = BoolValue.convert(v1);
+        boolean d2 = BoolValue.convert(v2);
+
+        if(d1&&d2) return new BoolValue(true);
+        return new BoolValue(false);
     }
     private Value<?> orOp(Value<?> v1, Value<?> v2) {
-        throw new RuntimeException("Me implemente!");
+        boolean d1 = BoolValue.convert(v1);
+        boolean d2 = BoolValue.convert(v2);
+
+        if(d1||d2) return new BoolValue(true);
+        return new BoolValue(false);
     }
     private Value<?> equalOp(Value<?> v1, Value<?> v2) {
-        throw new RuntimeException("Me implemente!");
+        double d1 = NumberValue.convert(v1);
+        double d2 = NumberValue.convert(v2);
+
+        if(d1==d2) return new BoolValue(true);
+        return new BoolValue(false);
     }
     private Value<?> notEqualOp(Value<?> v1, Value<?> v2) {
-        throw new RuntimeException("Me implemente!");
+        double d1 = NumberValue.convert(v1);
+        double d2 = NumberValue.convert(v2);
+
+        if(d1!=d2) return new BoolValue(false);
+        return new BoolValue(true);
     }
     private Value<?> lowerThanOp(Value<?> v1, Value<?> v2) {
-        throw new RuntimeException("Me implemente!");
+        double d1 = NumberValue.convert(v1);
+        double d2 = NumberValue.convert(v2);
+        if (d1 < d2)  return new BoolValue(true);
+        return new BoolValue(false);
+       
     }
     private Value<?> lowerEqualOp(Value<?> v1, Value<?> v2) {
-        throw new RuntimeException("Me implemente!");
+        double d1 = NumberValue.convert(v1);
+        double d2 = NumberValue.convert(v2);
+        if (d1 <= d2)  return new BoolValue(true);
+        return new BoolValue(false);
     }
     private Value<?> greaterThanOp(Value<?> v1, Value<?> v2) {
-        throw new RuntimeException("Me implemente!");
+        double d1 = NumberValue.convert(v1);
+        double d2 = NumberValue.convert(v2);
+        if (d1 > d2)  return new BoolValue(true);
+        return new BoolValue(false);
     }
+
     private Value<?> greaterEqualOp(Value<?> v1, Value<?> v2) {
-        throw new RuntimeException("Me implemente!");
+        double d1 = NumberValue.convert(v1);
+        double d2 = NumberValue.convert(v2);
+        if (d1 >= d2)  return new BoolValue(true);
+        return new BoolValue(false);
     }
     private Value<?> addOp(Value<?> v1, Value<?> v2) { // problema: se passar string, precisa concatenar
         throw new RuntimeException("Me implemente!");
