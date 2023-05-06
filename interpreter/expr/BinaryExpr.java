@@ -2,6 +2,7 @@ package interpreter.expr;
 
 import interpreter.value.BoolValue;
 import interpreter.value.NumberValue;
+import interpreter.value.TextValue;
 import interpreter.value.Value;
 
 public class BinaryExpr extends Expr {
@@ -136,7 +137,16 @@ public class BinaryExpr extends Expr {
         return new BoolValue(false);
     }
     private Value<?> addOp(Value<?> v1, Value<?> v2) { // problema: se passar string, precisa concatenar
-        throw new RuntimeException("Me implemente!");
+        if (v1 instanceof NumberValue && v2 instanceof NumberValue) {
+            double d1 = NumberValue.convert(v1);
+            double d2 = NumberValue.convert(v2);
+            return new NumberValue(d1 + d2);
+        } else if (v1 instanceof TextValue && v2 instanceof TextValue) {
+            String s1 = TextValue.convert(v1);
+            String s2 = TextValue.convert(v2);
+            return new TextValue(s1 + s2);
+        }
+        return null;
     }
     private Value<?> subOp(Value<?> v1, Value<?> v2) {
         double d1 = NumberValue.convert(v1);
