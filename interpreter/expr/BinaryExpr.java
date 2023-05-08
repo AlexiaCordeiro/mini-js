@@ -141,12 +141,15 @@ public class BinaryExpr extends Expr {
             double d1 = NumberValue.convert(v1);
             double d2 = NumberValue.convert(v2);
             return new NumberValue(d1 + d2);
+
         } else if (v1 instanceof TextValue && v2 instanceof TextValue) {
             String s1 = TextValue.convert(v1);
             String s2 = TextValue.convert(v2);
             return new TextValue(s1 + s2);
+
         }
         return null;
+        
     }
     private Value<?> subOp(Value<?> v1, Value<?> v2) {
         double d1 = NumberValue.convert(v1);
