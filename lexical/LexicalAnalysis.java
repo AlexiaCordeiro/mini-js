@@ -125,16 +125,7 @@ public class LexicalAnalysis implements AutoCloseable {
                     } else if (c == -1) {
                         state = 14;
                         token.type = Token.Type.END_OF_FILE;
-                    } else if(c == '='){
-                        state = 4;
-                        token.lexeme += (char) c;
-                    }else if(c == '/'){
-                        state = 2;
-                        token.lexeme += (char) c;
-                    }else if(c == '"'){
-                        state = 12;
-                        token.lexeme += (char) c;
-                    }else {
+                    } else {
                         state = 14;
                         token.lexeme += (char) c;
                         token.type = Token.Type.INVALID_TOKEN;
@@ -160,13 +151,13 @@ public class LexicalAnalysis implements AutoCloseable {
                     }
 
                 case 4:
-                    if (c == '='){
-                        state = 13;
-                        token.lexeme += (char) c;
-                    }else if(c != '='){
-                        state = 13;
-                        ungetc(c);
-                    }
+                if (c == '='){
+                    state = 13;
+                    token.lexeme += (char) c;
+                }else if(c != '='){
+                    state = 13;
+                    ungetc(c);
+                }
 
                 case 5:
                     if (c == '+') {
