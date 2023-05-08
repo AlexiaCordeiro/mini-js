@@ -32,10 +32,23 @@ import static lexical.Token.Type.OR;
 import static lexical.Token.Type.RETURN;
 import static lexical.Token.Type.SEMICOLON;
 import static lexical.Token.Type.SUB;
+import static lexical.Token.Type.TERNARY;
 import static lexical.Token.Type.TEXT;
 import static lexical.Token.Type.TRUE;
 import static lexical.Token.Type.UNDEFINED;
 import static lexical.Token.Type.WHILE;
+import static lexical.Token.Type.LOWER_THAN;
+import static lexical.Token.Type.LOWER_EQUAL;
+import static lexical.Token.Type.GREATER_THAN;
+import static lexical.Token.Type.GREATER_EQUAL;
+import static lexical.Token.Type.EQUALS;
+import static lexical.Token.Type.NOT_EQUALS;
+
+
+
+
+
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,10 +65,13 @@ import interpreter.command.WhileCommand;
 import interpreter.expr.BinaryExpr;
 import interpreter.expr.ConstExpr;
 import interpreter.expr.Expr;
+import interpreter.expr.FunctionCallExpr;
 import interpreter.expr.SetExpr;
 import interpreter.expr.UnaryExpr;
 import interpreter.expr.Variable;
+import interpreter.function.StandardFunction;
 import interpreter.value.BoolValue;
+import interpreter.value.FunctionValue;
 import interpreter.value.Value;
 import lexical.LexicalAnalysis;
 import lexical.Token;
@@ -76,13 +92,13 @@ public class SyntaticAnalysis {
 
     public Command process() {
         Command cmd = procCode();
-        // Expr expr = procExpr();
         eat(END_OF_FILE);
+
         return cmd;
     }
 
     private void advance() {
-        System.out.println("Found " + current);
+        // System.out.println("Found " + current);
         previous = current;
         current = lex.nextToken();
     }
@@ -91,7 +107,7 @@ public class SyntaticAnalysis {
         if (type == current.type) {
             advance();
         } else {
-            System.out.println("Expected (..., " + type + ", ..., ...), found " + current);
+            // System.out.println("Expected (..., " + type + ", ..., ...), found " + current);
             reportError();
         }
     }
@@ -145,8 +161,7 @@ public class SyntaticAnalysis {
             cmds.add(cmd);
         }
 
-        BlocksCommand bcmds = new BlocksCommand(line, cmds);
-        return bcmds;
+        return new BlocksCommand(line, cmds);
     }
 
     // <cmd> ::= <block> | <decl> | <debug> | <if> | <while> | <for> | <assign>
@@ -173,17 +188,19 @@ public class SyntaticAnalysis {
 
     // <block> ::= '{' <code> '}'
     private BlocksCommand procBlock() {
+        eat(OPEN_CUR);
+
         Environment old = this.environment;
         this.environment = new Environment(old);
-        
-        BlocksCommand bcmds;
+
+        BlocksCommand bcmds = null;
         try {
-            eat(OPEN_CUR);
             bcmds = procCode();
-            eat(CLOSE_CUR);
         } finally {
             this.environment = old;
         }
+
+        eat(CLOSE_CUR);
 
         return bcmds;
     }
@@ -197,11 +214,13 @@ public class SyntaticAnalysis {
             reportError();
         }
         int line = previous.line;
-
+        
         Token name = procName();
         Variable var = this.environment.declare(name, constant);
 
-        Expr expr = match(ASSIGN) ? procExpr() : new ConstExpr(name.line, null);
+        Expr expr = match(ASSIGN) ?
+            procExpr() : new ConstExpr(name.line, null);
+
         InitializeCommand icmd = new InitializeCommand(name.line, var, expr);
 
         List<Command> cmds = new ArrayList<Command>();
@@ -211,7 +230,9 @@ public class SyntaticAnalysis {
             name = procName();
             var = this.environment.declare(name, constant);
 
-            expr = match(ASSIGN) ? procExpr() : new ConstExpr(name.line, null);
+            expr = match(ASSIGN) ?
+                procExpr() : new ConstExpr(name.line, null);
+
             icmd = new InitializeCommand(name.line, var, expr);
             cmds.add(icmd);
         }
@@ -226,7 +247,7 @@ public class SyntaticAnalysis {
     private DebugCommand procDebug() {
         eat(DEBUG);
         int line = previous.line;
-    
+
         Expr expr = procExpr();
         eat(SEMICOLON);
 
@@ -253,7 +274,7 @@ public class SyntaticAnalysis {
         eat(OPEN_PAR);
         Expr expr = procExpr();
         eat(CLOSE_PAR);
-        Command cmds = procCode();
+        Command cmds = procCmd();
 
         WhileCommand wcmd = new WhileCommand(line, expr, cmds);
         return wcmd;
@@ -294,37 +315,82 @@ public class SyntaticAnalysis {
     }
 
     // <expr> ::= <cond> [ '?' <expr> ':' <expr> ]
-    private Expr procExpr() { 
+    private Expr procExpr() {
         Expr expr = procCond();
-
+        if(match(TERNARY)) {
+        	procExpr();
+        	eat(COLON);
+        	procExpr();
+        }
         // TODO: fazer o resto.
+
         return expr;
     }
 
     // <cond> ::= <rel> { ( '&&' | '||' ) <rel> }
     private Expr procCond() {
-        Expr expr = procRel();
+        Expr left = procRel();
         while (match(AND, OR)) {
-            // TODO: lembrar de implementar.
-            procRel();
-        }
+        	BinaryExpr.Op op;
+        	switch (previous.type) {
+        		case AND:
+        			op = BinaryExpr.Op.And;
+        			break;
+        		case OR:
+    			default:
+        			op = BinaryExpr.Op.Or;
+        			break;
+        	}
+        	int line = previous.line;
 
-        return expr;
+            Expr right = procTerm();
+
+            left = new BinaryExpr(line, left, op, right);
+            // TODO: Me implementar.
+         }
+        return left;
     }
 
     // <rel> ::= <arith> [ ( '<' | '>' | '<=' | '>=' | '==' | '!=' ) <arith> ]
     private Expr procRel() {
-        Expr expr = procArith();
+        Expr left = procArith();        
+        if(match(LOWER_THAN, LOWER_EQUAL, GREATER_THAN, GREATER_EQUAL, EQUALS, NOT_EQUALS)) {
+        	BinaryExpr.Op op;
+        	switch(previous.type) {
+        		case LOWER_THAN:
+        			op = BinaryExpr.Op.LowerThan;
+        			break;
+        		case LOWER_EQUAL:
+        			op = BinaryExpr.Op.LowerEqual;
+        			break;
+        		case GREATER_THAN:
+        			op = BinaryExpr.Op.GreaterThan;
+        			break;
+        		case GREATER_EQUAL:
+        			op = BinaryExpr.Op.GreaterEqual;
+        			break;
+        		case EQUALS:
+        			op = BinaryExpr.Op.Equal;
+        			break;
+        		case NOT_EQUALS:
+    			default:
+        			op = BinaryExpr.Op.NotEqual;
+        			break;
+        	}
+        	int line = previous.line;
+        	
+        	Expr right = procArith();
 
+            left = new BinaryExpr(line, left, op, right);
+        }
+        
         // TODO: fazer o resto.
-
-        return expr;
+        return left;
     }
 
     // <arith> ::= <term> { ( '+' | '-' ) <term> }
     private Expr procArith() {
         Expr left = procTerm();
-
         while (match(ADD, SUB)) {
             BinaryExpr.Op op;
             switch (previous.type) {
@@ -386,13 +452,13 @@ public class SyntaticAnalysis {
             UnaryExpr.Op op;
             switch (token.type) {
                 case NOT:
-                    op = UnaryExpr.Op.NotOp;
+                    op = UnaryExpr.Op.Not;
                     break;
                 case ADD:
-                    op = UnaryExpr.Op.PosOp;
+                    op = UnaryExpr.Op.Pos;
                     break;
                 case SUB:
-                    op = UnaryExpr.Op.NegOp;
+                    op = UnaryExpr.Op.Neg;
                     break;
                 case INC:
                     op = UnaryExpr.Op.PreInc;
@@ -403,33 +469,47 @@ public class SyntaticAnalysis {
                     break;
             }
 
-            UnaryExpr uexpr = new UnaryExpr(token.line,
-                expr, op);
+            UnaryExpr uexpr = new UnaryExpr(previous.line,
+                 expr, op);
             expr = uexpr;
         }
 
         return expr;
     }
 
-    // <factor> ::= ( '(' <expr> ')' | <rvalue> ) <calls>  [ '++' | '--' ]
+ // <factor> ::= ( '(' <expr> ')' | <rvalue> ) <calls>  [ '++' | '--' ]
     private Expr procFactor() {
         Expr expr = null;
+        Token token = null;
         if (match(OPEN_PAR)) {
-            procExpr();
+            expr = procExpr();
             eat(CLOSE_PAR);
         } else {
             expr = procRValue();
         }
 
-        procCalls();
+        expr = procCalls(expr);
 
         if (match(INC, DEC)) {
-            // fazer nada
+        	token = previous;
+        	UnaryExpr.Op op;
+            switch (token.type) {
+            case INC:
+                op = UnaryExpr.Op.PosInc;
+                break;
+            case DEC:
+            default:
+                op = UnaryExpr.Op.PosDec;
+                break;
         }
 
+        UnaryExpr uexpr = new UnaryExpr(previous.line,
+             expr, op);
+        expr = uexpr;
+        }
+        //TODO => ALTEROU-SE AQUI
         return expr;
     }
-
     // <rvalue> ::= <const> | <list> | <object> | <function> | <lvalue>
     private Expr procRValue() {
         Expr expr = null;
@@ -441,7 +521,10 @@ public class SyntaticAnalysis {
         } else if (check(OPEN_CUR)) {
             procObject();
         } else if (check(FUNCTION)) {
-            procFunction();
+            int line = current.line;
+            StandardFunction sf = procFunction();
+            FunctionValue fv = new FunctionValue(sf);
+            expr = new ConstExpr(line, fv);
         } else {
             expr = procLValue();
         }
@@ -514,17 +597,35 @@ public class SyntaticAnalysis {
     }
 
     // <function> ::= function '(' ')' '{' <code> [ return <expr> ';' ] '}'
-    private void procFunction() {
+    private StandardFunction procFunction() {
         eat(FUNCTION);
         eat(OPEN_PAR);
         eat(CLOSE_PAR);
         eat(OPEN_CUR);
-        procCode();
-        if (match(RETURN)) {
-            procExpr();
-            eat(SEMICOLON);
+
+        Environment old = this.environment;
+        this.environment = new Environment(old);
+
+        StandardFunction sf = null;
+        try {
+            Variable params = this.environment.declare(
+                new Token("params", Token.Type.NAME, null),
+                false);
+        
+            Command cmds = procCode();
+            Expr ret = null;
+            if (match(RETURN)) {
+                ret = procExpr();
+                eat(SEMICOLON);
+            }
+
+            sf = new StandardFunction(params, cmds, ret);
+        } finally {
+            this.environment = old;
         }
         eat(CLOSE_CUR);
+
+        return sf;
     }
 
     // <lvalue> ::= <name> { '.' <name> | '[' <expr> ']' }
@@ -541,24 +642,34 @@ public class SyntaticAnalysis {
         //         eat(CLOSE_BRA);
         //     }
         // }
+        //TODO?
 
         return var;
     }
 
     // <calls> ::= { '(' [ <expr> { ',' <expr> } ] ')' }
-    private void procCalls() {
+    private Expr procCalls(Expr expr) {
         while (match(OPEN_PAR)) {
+            int line = previous.line;
+
+            List<Expr> args = new ArrayList<Expr>();
             if (check(NOT, ADD, SUB, INC, DEC, OPEN_PAR,
                     UNDEFINED, FALSE, TRUE, NUMBER, TEXT, OPEN_BRA,
                     OPEN_CUR, FUNCTION, NAME)) {
-                procExpr();
+                Expr a = procExpr();
+                args.add(a);
                 while (match(COMMA)) {
-                    procExpr();
+                    a = procExpr();
+                    args.add(a);
                 }
             }
 
             eat(CLOSE_PAR);
+
+            expr = new FunctionCallExpr(line, expr, args);
         }
+        
+        return expr;
     }
 
     private Value<?> procNumber() {
