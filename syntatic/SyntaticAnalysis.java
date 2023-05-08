@@ -14,16 +14,22 @@ import static lexical.Token.Type.DEC;
 import static lexical.Token.Type.DIV;
 import static lexical.Token.Type.ELSE;
 import static lexical.Token.Type.END_OF_FILE;
+import static lexical.Token.Type.EQUALS;
 import static lexical.Token.Type.FALSE;
 import static lexical.Token.Type.FOR;
 import static lexical.Token.Type.FUNCTION;
+import static lexical.Token.Type.GREATER_EQUAL;
+import static lexical.Token.Type.GREATER_THAN;
 import static lexical.Token.Type.IF;
 import static lexical.Token.Type.IN;
 import static lexical.Token.Type.INC;
 import static lexical.Token.Type.LET;
+import static lexical.Token.Type.LOWER_EQUAL;
+import static lexical.Token.Type.LOWER_THAN;
 import static lexical.Token.Type.MUL;
 import static lexical.Token.Type.NAME;
 import static lexical.Token.Type.NOT;
+import static lexical.Token.Type.NOT_EQUALS;
 import static lexical.Token.Type.NUMBER;
 import static lexical.Token.Type.OPEN_BRA;
 import static lexical.Token.Type.OPEN_CUR;
@@ -37,18 +43,6 @@ import static lexical.Token.Type.TEXT;
 import static lexical.Token.Type.TRUE;
 import static lexical.Token.Type.UNDEFINED;
 import static lexical.Token.Type.WHILE;
-import static lexical.Token.Type.LOWER_THAN;
-import static lexical.Token.Type.LOWER_EQUAL;
-import static lexical.Token.Type.GREATER_THAN;
-import static lexical.Token.Type.GREATER_EQUAL;
-import static lexical.Token.Type.EQUALS;
-import static lexical.Token.Type.NOT_EQUALS;
-
-
-
-
-
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -452,13 +446,13 @@ public class SyntaticAnalysis {
             UnaryExpr.Op op;
             switch (token.type) {
                 case NOT:
-                    op = UnaryExpr.Op.Not;
+                    op = UnaryExpr.Op.NotOp;
                     break;
                 case ADD:
-                    op = UnaryExpr.Op.Pos;
+                    op = UnaryExpr.Op.PosOp;
                     break;
                 case SUB:
-                    op = UnaryExpr.Op.Neg;
+                    op = UnaryExpr.Op.NegOp;
                     break;
                 case INC:
                     op = UnaryExpr.Op.PreInc;

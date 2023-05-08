@@ -103,7 +103,13 @@ public class LexicalAnalysis implements AutoCloseable {
                             c == '}' || c == '[' || c == ']') {
                         state = 13;
                         token.lexeme += (char) c;
-                    } else if (c == '+') {
+                    }else if(c == '/'){
+                        state = 2;
+                        token.lexeme += (char) c;
+                    }else if(c == '='){
+                        state = 4;
+                        token.lexeme += (char) c;
+                    }else if (c == '+') {
                         state = 5;
                         token.lexeme += (char) c;
                     } else if (c == '-') {
@@ -125,12 +131,6 @@ public class LexicalAnalysis implements AutoCloseable {
                     } else if (c == -1) {
                         state = 14;
                         token.type = Token.Type.END_OF_FILE;
-                    } else if(c == '='){
-                        state = 4;
-                        token.lexeme += (char) c;
-                    }else if(c == '/'){
-                        state = 2;
-                        token.lexeme += (char) c;
                     }else if(c == '"'){
                         state = 12;
                         token.lexeme += (char) c;
@@ -149,7 +149,7 @@ public class LexicalAnalysis implements AutoCloseable {
                         state = 13;
                         ungetc(c);
                     }
-
+                    break;
                 case 3:
                     if (c == '\n'){
                         state = 1;
@@ -158,16 +158,17 @@ public class LexicalAnalysis implements AutoCloseable {
                         state = 3;
                         ungetc(c);
                     }
-
+                    break;
                 case 4:
-                    if (c == '='){
-                        state = 13;
+                    if (c == '='){    
                         token.lexeme += (char) c;
-                    }else if(c != '='){
                         state = 13;
+                    }else{
                         ungetc(c);
+                        state = 13;
+          
                     }
-
+                    break;
                 case 5:
                     if (c == '+') {
                         state = 13;
@@ -243,7 +244,7 @@ public class LexicalAnalysis implements AutoCloseable {
                         state = 14;
                         ungetc(c);
                     }
-
+                    break;
                 case 12:
                     if(c == '"'){
                         state = 14;

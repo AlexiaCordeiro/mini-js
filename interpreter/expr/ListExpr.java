@@ -1,11 +1,13 @@
 package interpreter.expr;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import interpreter.value.ListValue;
 import interpreter.value.Value;
 
 public class ListExpr extends Expr {
-    List<Expr> items;
+    private List<Expr> items;
 
     public ListExpr(int line, List<Expr> items){
         super(line);
@@ -14,6 +16,14 @@ public class ListExpr extends Expr {
 
     @Override
     public Value<?> expr() {
-        return null;
+        ArrayList<Value<?>> arv = new ArrayList<Value<?>>();
+
+        for (Expr v : items) {
+            arv.add(v.expr());
+    }
+
+    ListValue retorno = new ListValue(arv);
+
+    return retorno;
     }
 }
