@@ -28,6 +28,7 @@ public class NativeFunction extends Function{
 
         if(op == NativeOp.Log){
             System.out.println(getParams().getName());
+            
         }else if(op == NativeOp.Read){
             try (Scanner scanner = new Scanner(System.in)) {
                 String nextLine = scanner.nextLine();
@@ -37,6 +38,7 @@ public class NativeFunction extends Function{
         } else if(op == NativeOp.Random){
             Random random = new Random();
             double randomValue = random.nextDouble();
+
             returnValue = new NumberValue(randomValue);
         }
 
