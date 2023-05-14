@@ -54,6 +54,8 @@ import interpreter.command.AssignCommand;
 import interpreter.command.BlocksCommand;
 import interpreter.command.Command;
 import interpreter.command.DebugCommand;
+import interpreter.command.ForCommand;
+import interpreter.command.IfCommand;
 import interpreter.command.InitializeCommand;
 import interpreter.command.WhileCommand;
 import interpreter.expr.BinaryExpr;
@@ -92,7 +94,7 @@ public class SyntaticAnalysis {
     }
 
     private void advance() {
-        // System.out.println("Found " + current);
+       // System.out.println("Found " + current);
         previous = current;
         current = lex.nextToken();
     }
@@ -101,7 +103,7 @@ public class SyntaticAnalysis {
         if (type == current.type) {
             advance();
         } else {
-            // System.out.println("Expected (..., " + type + ", ..., ...), found " + current);
+             System.out.println("Expected (..., " + type + ", ..., ...), found " + current);
             reportError();
         }
     }
@@ -168,11 +170,11 @@ public class SyntaticAnalysis {
         } else if (check(DEBUG)) {
             cmd = procDebug();
         } else if (check(IF)) {
-            procIf();
+            cmd = procIf();
         } else if (check(WHILE)) {
             cmd = procWhile();
         } else if (check(FOR)) {
-            procFor();
+           cmd = procFor();
         } else {
             cmd = procAssign();
         }
@@ -249,15 +251,20 @@ public class SyntaticAnalysis {
     }
 
     // <if> ::= if '(' <expr> ')' <cmd> [ else <cmd> ]
-    private void procIf() {
+    private IfCommand procIf() {
+    	//System.out.println("AQUI");
         eat(IF);
+        int line = previous.line;
         eat(OPEN_PAR);
-        procExpr();
+        Expr expr = procExpr();
         eat(CLOSE_PAR);
-        procCmd();
+        Command ifcmds = procCmd();
+        Command elsecmds = null;
         if (match(ELSE)) {
-            procCmd();
+        	elsecmds = procCmd();
         }
+        IfCommand cmd = new IfCommand(line, expr, ifcmds, elsecmds);
+        return cmd; 
     }
 
     // <while> ::= while '(' <expr> ')' <cmd>
@@ -275,7 +282,7 @@ public class SyntaticAnalysis {
     }
 
     // <for> ::= for '(' [ let ] <name> in <expr> ')' <cmd>
-    private void procFor() {
+    private ForCommand procFor() {
         eat(FOR);
         eat(OPEN_PAR);
         if (match(LET)) {
@@ -286,6 +293,8 @@ public class SyntaticAnalysis {
         procExpr();
         eat(CLOSE_PAR);
         procCmd();
+        
+        return null;
     }
 
     // <assign> ::= [ <expr> '=' ] <expr> ';'
@@ -295,9 +304,9 @@ public class SyntaticAnalysis {
 
         SetExpr lhs = null;
         if (match(ASSIGN)) {
-            if (!(rhs instanceof SetExpr))
-                throw new InterpreterException(line);
-
+            if (!(rhs instanceof SetExpr)) {
+                throw new InterpreterException(line);   
+            }
             lhs = (SetExpr) rhs;
             rhs = procExpr();
         }
@@ -446,13 +455,13 @@ public class SyntaticAnalysis {
             UnaryExpr.Op op;
             switch (token.type) {
                 case NOT:
-                    op = UnaryExpr.Op.NotOp;
+                    op = UnaryExpr.Op.Not;
                     break;
                 case ADD:
-                    op = UnaryExpr.Op.PosOp;
+                    op = UnaryExpr.Op.Pos;
                     break;
                 case SUB:
-                    op = UnaryExpr.Op.NegOp;
+                    op = UnaryExpr.Op.Neg;
                     break;
                 case INC:
                     op = UnaryExpr.Op.PreInc;
@@ -622,7 +631,7 @@ public class SyntaticAnalysis {
         return sf;
     }
 
-    // <lvalue> ::= <name> { '.' <name> | '[' <expr> ']' }
+ // <lvalue> ::= <name> { '.' <name> | '[' <expr> ']' }
     private SetExpr procLValue() {
         Token name = procName();
         Variable var = this.environment.get(name);

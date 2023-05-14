@@ -4,7 +4,7 @@ import interpreter.expr.Expr;
 import interpreter.value.Value;
 
 public class DebugCommand extends Command {
-    
+
     private Expr expr;
 
     public DebugCommand(int line, Expr expr) {
@@ -20,5 +20,5 @@ public class DebugCommand extends Command {
         else
             System.out.println(v);
     }
-
+    
 }

@@ -106,7 +106,7 @@ public class LexicalAnalysis implements AutoCloseable {
                     }else if(c == '/'){
                         state = 2;
                         token.lexeme += (char) c;
-                    }else if(c == '='){
+                    }else if(c == '=' || c == '!' || c == '>' || c == '<'){
                         state = 4;
                         token.lexeme += (char) c;
                     }else if (c == '+') {

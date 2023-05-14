@@ -20,5 +20,6 @@ public class InitializeCommand extends Command {
         Value<?> v = expr.expr();
         var.initialize(v);
     }
+
     
 }

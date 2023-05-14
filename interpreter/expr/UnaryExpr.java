@@ -3,13 +3,14 @@ package interpreter.expr;
 import interpreter.value.BoolValue;
 import interpreter.value.NumberValue;
 import interpreter.value.Value;
+import interpreter.InterpreterException;
 
 public class UnaryExpr extends Expr {
-    
+
     public static enum Op {
-        NotOp,
-        PosOp,
-        NegOp,
+        Not,
+        Pos,
+        Neg,
         PreInc,
         PosInc,
         PreDec,
@@ -25,16 +26,14 @@ public class UnaryExpr extends Expr {
         this.op = op;
     }
 
-    @Override
     public Value<?> expr() {
-        Value<?> v = expr.expr();
-
+        Value<?> v = this.expr.expr();
         switch (this.op) {
-            case NotOp:
+            case Not:
                 return notOp(v);
-            case PosOp:
+            case Pos:
                 return posOp(v);
-            case NegOp:
+            case Neg:
                 return negOp(v);
             case PreInc:
                 return preIncOp(v);
@@ -54,29 +53,58 @@ public class UnaryExpr extends Expr {
     }
 
     private Value<?> posOp(Value<?> v) {
-        double d = NumberValue.convert(v);
-        return new NumberValue(d);
+        double n = NumberValue.convert(v);
+        return new NumberValue(n);
     }
 
     private Value<?> negOp(Value<?> v) {
-        double d = NumberValue.convert(v);
-        return new NumberValue(-d);
+        double n = NumberValue.convert(v);
+        return new NumberValue(-n);
     }
 
-    private Value<?> preIncOp(Value<?> v) { //++int
-        throw new RuntimeException("implement me!");
+    private Value<?> preIncOp(Value<?> v) {
+    	if(this.expr instanceof SetExpr) {
+    		NumberValue result = new NumberValue(NumberValue.convert(v)+1);
+    		((SetExpr) this.expr).setValue(result);
+    		return result;
+		}
+    	else {
+    		throw new InterpreterException(super.getLine());
+    	}    	
+    }
+    	
+    private Value<?> posIncOp(Value<?> v) {
+    	if(this.expr instanceof SetExpr) {
+    		NumberValue result = new NumberValue(NumberValue.convert(v)+1);
+        	((SetExpr) this.expr).setValue(result);
+        	NumberValue aux = new NumberValue(NumberValue.convert(v));
+        	return aux;
+		}
+    	else {
+    		throw new InterpreterException(super.getLine());
+    	}  
     }
 
-    private Value<?> posIncOp(Value<?> v) { //int++
-        throw new RuntimeException("implement me!");
+    private Value<?> preDecOp(Value<?> v) {
+    	if(this.expr instanceof SetExpr) {
+    		NumberValue result = new NumberValue(NumberValue.convert(v)-1);
+    		((SetExpr) this.expr).setValue(result);
+    		return result;
+		}
+    	else {
+    		throw new InterpreterException(super.getLine());
+    	}   
     }
 
-    private Value<?> preDecOp(Value<?> v) { //--int
-        throw new RuntimeException("implement me!");
+    private Value<?> posDecOp(Value<?> v) {
+    	if(this.expr instanceof SetExpr) {
+    		NumberValue result = new NumberValue(NumberValue.convert(v)-1);
+        	((SetExpr) this.expr).setValue(result);
+        	NumberValue aux = new NumberValue(NumberValue.convert(v));
+        	return aux;
+		}
+    	else {
+    		throw new InterpreterException(super.getLine());
+    	} 
     }
-
-    private Value<?> posDecOp(Value<?> v) { //int--
-        throw new RuntimeException("implement me!");
-    }
-
 }

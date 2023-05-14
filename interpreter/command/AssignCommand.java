@@ -23,7 +23,9 @@ public class AssignCommand extends Command {
     public void execute() {
         Value<?> v = rhs.expr();
         if (lhs != null)
-           lhs.setValue(v);
+            lhs.setValue(v);
     }
+
+
     
 }

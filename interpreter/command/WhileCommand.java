@@ -26,4 +26,5 @@ public class WhileCommand extends Command {
             cmds.execute();
         }
     }
+
 }
